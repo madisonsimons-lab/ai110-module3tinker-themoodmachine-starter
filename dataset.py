@@ -50,6 +50,15 @@ SAMPLE_POSTS = [
     "This is fine",
     "So excited for the weekend",
     "I am not happy about this",
+    # --- Added posts ---
+    "lowkey obsessed with this song rn 😭",
+    "I absolutely love sitting in traffic for 2 hours, truly a great time",
+    "not gonna lie today hit different, in a good way",
+    "been crying but like... the healing kind? idk 🥲",
+    "woke up and chose chaos 💀 no regrets",
+    "everything is fine. this is fine. i'm fine.",
+    "highkey proud of myself ngl",
+    "so tired i can't tell if i'm sad or just sleepy",
 ]
 
 # Human labels for each post above.
@@ -58,13 +67,36 @@ SAMPLE_POSTS = [
 #   - "negative"
 #   - "neutral"
 #   - "mixed"
+#
+# Labeling notes:
+#   EASY (high agreement):
+#     - "I love this class so much"     → positive ("love" is unambiguously positive)
+#     - "Today was a terrible day"      → negative ("terrible" is unambiguously negative)
+#     - "So excited for the weekend"    → positive (clearly positive, no conflicting signals)
+#
+#   AMBIGUOUS / DEBATABLE:
+#     - "Feeling tired but kind of hopeful" → mixed (two competing emotions; some might weight
+#                                              "hopeful" more and say positive)
+#     - "This is fine"                      → neutral (famously sarcastic; many would argue
+#                                              negative — high disagreement potential)
+#     - "I am not happy about this"         → negative (humans agree, but the word "happy"
+#                                              could fool a rule-based model due to negation)
 TRUE_LABELS = [
-    "positive",  # "I love this class so much"
-    "negative",  # "Today was a terrible day"
-    "mixed",     # "Feeling tired but kind of hopeful"
-    "neutral",   # "This is fine"
-    "positive",  # "So excited for the weekend"
-    "negative",  # "I am not happy about this"
+    "positive",  # "I love this class so much"          [EASY]
+    "negative",  # "Today was a terrible day"            [EASY]
+    "mixed",     # "Feeling tired but kind of hopeful"   [AMBIGUOUS: could lean positive]
+    "neutral",   # "This is fine"                        [AMBIGUOUS: sarcasm → could be negative]
+    "positive",  # "So excited for the weekend"          [EASY]
+    "negative",  # "I am not happy about this"           [AMBIGUOUS: negation trap for rule-based model]
+    # --- Added labels ---
+    "positive",  # "lowkey obsessed with this song rn 😭"            [AMBIGUOUS: 😭 looks sad but means hype in slang]
+    "negative",  # "I absolutely love sitting in traffic..."         [EASY for humans: obvious sarcasm]
+    "positive",  # "not gonna lie today hit different, in a good way" [EASY: explicit positive qualifier]
+    "mixed",     # "been crying but like... the healing kind? 🥲"     [AMBIGUOUS: sad act, positive framing]
+    "positive",  # "woke up and chose chaos 💀 no regrets"            [AMBIGUOUS: 💀 is playful here, not negative]
+    "negative",  # "everything is fine. this is fine. i'm fine."      [AMBIGUOUS: heavy sarcasm, repetition signals distress]
+    "positive",  # "highkey proud of myself ngl"                      [EASY: slang but clearly positive]
+    "mixed",     # "so tired i can't tell if i'm sad or just sleepy"  [AMBIGUOUS: emotional uncertainty]
 ]
 
 # TODO: Add 5-10 more posts and labels.

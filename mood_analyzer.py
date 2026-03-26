@@ -9,6 +9,7 @@ This class starts with very simple logic:
   - Convert that score into a mood label
 """
 
+import re
 from typing import List, Dict, Tuple, Optional
 
 from dataset import POSITIVE_WORDS, NEGATIVE_WORDS
@@ -17,6 +18,12 @@ from dataset import POSITIVE_WORDS, NEGATIVE_WORDS
 class MoodAnalyzer:
     """
     A very simple, rule based mood classifier.
+
+    Data flow:
+      raw text
+        → preprocess()   — lowercase, split into tokens
+        → score_text()   — count positive/negative word matches → int
+        → predict_label() — map score to "positive" / "negative" / "neutral"
     """
 
     def __init__(
@@ -40,20 +47,24 @@ class MoodAnalyzer:
         """
         Convert raw text into a list of tokens the model can work with.
 
-        TODO: Improve this method.
+        Note: Updated to use regex tokenization so punctuation is cleaned,
+        contractions stay intact, and key emojis/smileys are preserved.
 
-        Right now, it does the minimum:
-          - Strips leading and trailing whitespace
-          - Converts everything to lowercase
-          - Splits on spaces
-
-        Ideas to improve:
-          - Remove punctuation
-          - Handle simple emojis separately (":)", ":-(", "🥲", "😂")
-          - Normalize repeated characters ("soooo" -> "soo")
+        Current preprocessing choices are intentionally simple and focused on
+        what matters for the starter dataset:
+          - Lowercase for case-insensitive matching
+          - Tokenize words while stripping punctuation around them
+          - Keep contractions as one token ("can't")
+          - Preserve common text smileys and selected emoji as standalone tokens
         """
         cleaned = text.strip().lower()
-        tokens = cleaned.split()
+
+        # Tokenization pattern:
+        # - words with optional apostrophe (can't, i'm)
+        # - text smileys (:), :(, :-), etc.
+        # - a small emoji set used in this lab's data
+        token_pattern = r"[a-z]+(?:'[a-z]+)?|[:;]-?[)(]|[🥲😂💀😭]"
+        tokens = re.findall(token_pattern, cleaned)
 
         return tokens
 
@@ -75,15 +86,36 @@ class MoodAnalyzer:
           - Give some words higher weights than others (for example "hate" < "annoyed")
           - Treat emojis or slang (":)", "lol", "💀") as strong signals
         """
-        # TODO: Implement this method.
-        #   1. Call self.preprocess(text) to get tokens.
-        #   2. Loop over the tokens.
-        #   3. Increase the score for positive words, decrease for negative words.
-        #   4. Return the total score.
-        #
-        # Hint: if you implement negation, you may want to look at pairs of tokens,
-        # like ("not", "happy") or ("never", "fun").
-        pass
+        tokens = self.preprocess(text)
+        score = 0
+
+        # Intentional enhancement: if a negation appears right before a known
+        # sentiment word, flip that next word's polarity ("not happy" -> -1).
+        negations = {"not", "no", "never"}
+
+        i = 0
+        while i < len(tokens):
+          token = tokens[i]
+
+          if token in negations and i + 1 < len(tokens):
+            next_token = tokens[i + 1]
+            if next_token in self.positive_words:
+              score -= 1
+              i += 2
+              continue
+            if next_token in self.negative_words:
+              score += 1
+              i += 2
+              continue
+
+          if token in self.positive_words:
+            score += 1
+          elif token in self.negative_words:
+            score -= 1
+
+          i += 1
+
+        return score
 
     # ---------------------------------------------------------------------
     # Label prediction
